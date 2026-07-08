@@ -162,9 +162,6 @@ github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
 github.com/subosito/gotenv
-# github.com/sykesm/zap-logfmt v0.0.4
-## explicit; go 1.13
-github.com/sykesm/zap-logfmt
 # go.uber.org/multierr v1.11.0
 ## explicit; go 1.19
 go.uber.org/multierr
