@@ -34,6 +34,14 @@ type Key interface {
 	PublicKey() (Key, error)
 }
 
+// MessageSignerKey identifies signature keys that consume the complete message
+// instead of a caller-computed digest. It is optional so existing BCCSP key
+// implementations remain source compatible.
+type MessageSignerKey interface {
+	Key
+	RequiresFullMessage() bool
+}
+
 // KeyGenOpts contains options for key-generation with a CSP.
 type KeyGenOpts interface {
 

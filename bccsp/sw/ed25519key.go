@@ -52,6 +52,8 @@ func (k *ed25519PrivateKey) Private() bool {
 	return true
 }
 
+func (k *ed25519PrivateKey) RequiresFullMessage() bool { return true }
+
 // PublicKey returns the corresponding public key part of an asymmetric public/private key pair.
 // This method returns an error in symmetric key schemes.
 func (k *ed25519PrivateKey) PublicKey() (bccsp.Key, error) {
@@ -101,6 +103,8 @@ func (k *ed25519PublicKey) Symmetric() bool {
 func (k *ed25519PublicKey) Private() bool {
 	return false
 }
+
+func (k *ed25519PublicKey) RequiresFullMessage() bool { return true }
 
 // PublicKey returns the corresponding public key part of an asymmetric public/private key pair.
 // This method returns an error in symmetric key schemes.
