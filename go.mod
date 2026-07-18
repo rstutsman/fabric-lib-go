@@ -3,6 +3,7 @@ module github.com/hyperledger/fabric-lib-go
 go 1.24.2
 
 require (
+	github.com/cloudflare/circl v1.6.4
 	github.com/go-kit/kit v0.13.0
 	github.com/miekg/pkcs11 v1.1.1
 	github.com/mitchellh/mapstructure v1.5.0

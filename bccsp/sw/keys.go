@@ -18,6 +18,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
+)
+
+const (
+	mldsa44PrivateKeyPEM = "ML-DSA-44 PRIVATE KEY"
+	mldsa44PublicKeyPEM  = "ML-DSA-44 PUBLIC KEY"
 )
 
 type pkcs8Info struct {
@@ -124,6 +131,11 @@ func privateKeyToPEM(privateKey interface{}, pwd []byte) ([]byte, error) {
 				Bytes: pkcs8Bytes,
 			},
 		), nil
+	case *mldsa44.PrivateKey:
+		if k == nil {
+			return nil, errors.New("invalid ML-DSA-44 private key. It must be different from nil")
+		}
+		return pem.EncodeToMemory(&pem.Block{Type: mldsa44PrivateKeyPEM, Bytes: k.Bytes()}), nil
 	case *ed25519.PrivateKey:
 		if k == nil {
 			return nil, errors.New("invalid ed25519 private key. It must be different from nil")
@@ -183,6 +195,15 @@ func privateKeyToEncryptedPEM(privateKey interface{}, pwd []byte) ([]byte, error
 			return nil, err
 		}
 
+		return pem.EncodeToMemory(block), nil
+	case *mldsa44.PrivateKey:
+		if k == nil {
+			return nil, errors.New("invalid ML-DSA-44 private key. It must be different from nil")
+		}
+		block, err := x509.EncryptPEMBlock(rand.Reader, mldsa44PrivateKeyPEM, k.Bytes(), pwd, x509.PEMCipherAES256)
+		if err != nil {
+			return nil, err
+		}
 		return pem.EncodeToMemory(block), nil
 	case *ed25519.PrivateKey:
 		if k == nil {
@@ -251,11 +272,18 @@ func pemToPrivateKey(raw []byte, pwd []byte) (interface{}, error) {
 			return nil, fmt.Errorf("failed PEM decryption: [%s]", err)
 		}
 
+		if block.Type == mldsa44PrivateKeyPEM {
+			return parseMLDSA44PrivateKey(decrypted)
+		}
+
 		key, err := derToPrivateKey(decrypted)
 		if err != nil {
 			return nil, err
 		}
 		return key, err
+	}
+	if block.Type == mldsa44PrivateKeyPEM {
+		return parseMLDSA44PrivateKey(block.Bytes)
 	}
 
 	cert, err := derToPrivateKey(block.Bytes)
@@ -370,6 +398,11 @@ func publicKeyToPEM(publicKey interface{}, pwd []byte) ([]byte, error) {
 				Bytes: PubASN1,
 			},
 		), nil
+	case *mldsa44.PublicKey:
+		if k == nil {
+			return nil, errors.New("invalid ML-DSA-44 public key. It must be different from nil")
+		}
+		return pem.EncodeToMemory(&pem.Block{Type: mldsa44PublicKeyPEM, Bytes: k.Bytes()}), nil
 
 	default:
 		return nil, errors.New("invalid key type. It must be *ecdsa.PublicKey, *ed25519.PublicKey or *rsa.PublicKey")
@@ -418,6 +451,15 @@ func publicKeyToEncryptedPEM(publicKey interface{}, pwd []byte) ([]byte, error) 
 		}
 
 		return pem.EncodeToMemory(block), nil
+	case *mldsa44.PublicKey:
+		if k == nil {
+			return nil, errors.New("invalid ML-DSA-44 public key. It must be different from nil")
+		}
+		block, err := x509.EncryptPEMBlock(rand.Reader, mldsa44PublicKeyPEM, k.Bytes(), pwd, x509.PEMCipherAES256)
+		if err != nil {
+			return nil, err
+		}
+		return pem.EncodeToMemory(block), nil
 	default:
 		return nil, errors.New("invalid key type. It must be *ecdsa.PublicKey or *ed25519.PublicKey")
 	}
@@ -443,11 +485,18 @@ func pemToPublicKey(raw []byte, pwd []byte) (interface{}, error) {
 			return nil, fmt.Errorf("failed PEM decryption: [%s]", err)
 		}
 
+		if block.Type == mldsa44PublicKeyPEM {
+			return parseMLDSA44PublicKey(decrypted)
+		}
+
 		key, err := derToPublicKey(decrypted)
 		if err != nil {
 			return nil, err
 		}
 		return key, err
+	}
+	if block.Type == mldsa44PublicKeyPEM {
+		return parseMLDSA44PublicKey(block.Bytes)
 	}
 
 	cert, err := derToPublicKey(block.Bytes)
@@ -455,6 +504,22 @@ func pemToPublicKey(raw []byte, pwd []byte) (interface{}, error) {
 		return nil, err
 	}
 	return cert, err
+}
+
+func parseMLDSA44PrivateKey(raw []byte) (*mldsa44.PrivateKey, error) {
+	key := &mldsa44.PrivateKey{}
+	if err := key.UnmarshalBinary(raw); err != nil {
+		return nil, fmt.Errorf("invalid ML-DSA-44 private key: %w", err)
+	}
+	return key, nil
+}
+
+func parseMLDSA44PublicKey(raw []byte) (*mldsa44.PublicKey, error) {
+	key := &mldsa44.PublicKey{}
+	if err := key.UnmarshalBinary(raw); err != nil {
+		return nil, fmt.Errorf("invalid ML-DSA-44 public key: %w", err)
+	}
+	return key, nil
 }
 
 func derToPublicKey(raw []byte) (pub interface{}, err error) {

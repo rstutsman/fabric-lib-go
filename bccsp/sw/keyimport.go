@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 	"github.com/hyperledger/fabric-lib-go/bccsp"
 )
 
@@ -147,6 +148,34 @@ func (*ed25519GoPublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts 
 	}
 
 	return &ed25519PublicKey{&lowLevelKey}, nil
+}
+
+type mldsa44PrivateKeyImportOptsKeyImporter struct{}
+
+func (*mldsa44PrivateKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (bccsp.Key, error) {
+	packed, ok := raw.([]byte)
+	if !ok || len(packed) == 0 {
+		return nil, errors.New("invalid ML-DSA-44 private key; expected packed bytes")
+	}
+	key := &mldsa44.PrivateKey{}
+	if err := key.UnmarshalBinary(packed); err != nil {
+		return nil, fmt.Errorf("invalid ML-DSA-44 private key: %w", err)
+	}
+	return &mldsa44PrivateKey{privKey: key}, nil
+}
+
+type mldsa44PublicKeyImportOptsKeyImporter struct{}
+
+func (*mldsa44PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (bccsp.Key, error) {
+	packed, ok := raw.([]byte)
+	if !ok || len(packed) == 0 {
+		return nil, errors.New("invalid ML-DSA-44 public key; expected packed bytes")
+	}
+	key := &mldsa44.PublicKey{}
+	if err := key.UnmarshalBinary(packed); err != nil {
+		return nil, fmt.Errorf("invalid ML-DSA-44 public key: %w", err)
+	}
+	return &mldsa44PublicKey{pubKey: key}, nil
 }
 
 type rsaGoPublicKeyImportOptsKeyImporter struct{}

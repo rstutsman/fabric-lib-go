@@ -14,6 +14,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 	"github.com/hyperledger/fabric-lib-go/bccsp"
 )
 
@@ -39,6 +40,16 @@ func (kg *ed25519KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) 
 	}
 
 	return &ed25519PrivateKey{&privKey}, nil
+}
+
+type mldsa44KeyGenerator struct{}
+
+func (*mldsa44KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+	_, privateKey, err := mldsa44.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed generating ML-DSA-44 key: %w", err)
+	}
+	return &mldsa44PrivateKey{privKey: privateKey}, nil
 }
 
 type aesKeyGenerator struct {

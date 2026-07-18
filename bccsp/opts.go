@@ -25,6 +25,9 @@ const (
 	// ED25519 Algorithm
 	ED25519 = "ED25519"
 
+	// MLDSA44 is the ML-DSA-44 signature scheme standardized by FIPS 204.
+	MLDSA44 = "MLDSA44"
+
 	// RSA at the default security level.
 	// Each BCCSP may or may not support default security level. If not supported than
 	// an error will be returned.
@@ -96,6 +99,14 @@ func (opts *ECDSAKeyGenOpts) Ephemeral() bool {
 type ED25519KeyGenOpts struct {
 	Temporary bool
 }
+
+// MLDSA44KeyGenOpts contains options for ML-DSA-44 key generation.
+type MLDSA44KeyGenOpts struct {
+	Temporary bool
+}
+
+func (opts *MLDSA44KeyGenOpts) Algorithm() string { return MLDSA44 }
+func (opts *MLDSA44KeyGenOpts) Ephemeral() bool   { return opts.Temporary }
 
 // Algorithm returns the key generation algorithm identifier (to be used).
 func (opts *ED25519KeyGenOpts) Algorithm() string {
@@ -177,6 +188,22 @@ func (opts *ED25519PrivateKeyImportOpts) Ephemeral() bool {
 type ED25519GoPublicKeyImportOpts struct {
 	Temporary bool
 }
+
+// MLDSA44PrivateKeyImportOpts imports a packed FIPS 204 ML-DSA-44 private key.
+type MLDSA44PrivateKeyImportOpts struct {
+	Temporary bool
+}
+
+func (opts *MLDSA44PrivateKeyImportOpts) Algorithm() string { return MLDSA44 }
+func (opts *MLDSA44PrivateKeyImportOpts) Ephemeral() bool   { return opts.Temporary }
+
+// MLDSA44PublicKeyImportOpts imports a packed FIPS 204 ML-DSA-44 public key.
+type MLDSA44PublicKeyImportOpts struct {
+	Temporary bool
+}
+
+func (opts *MLDSA44PublicKeyImportOpts) Algorithm() string { return MLDSA44 }
+func (opts *MLDSA44PublicKeyImportOpts) Ephemeral() bool   { return opts.Temporary }
 
 // Algorithm returns the key importation algorithm identifier (to be used).
 func (opts *ED25519GoPublicKeyImportOpts) Algorithm() string {

@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 	"github.com/hyperledger/fabric-lib-go/bccsp"
 )
 
@@ -147,6 +148,8 @@ func (ks *fileBasedKeyStore) GetKey(ski []byte) (bccsp.Key, error) {
 			return &ed25519PrivateKey{&k}, nil
 		case *rsa.PrivateKey:
 			return &rsaPrivateKey{k}, nil
+		case *mldsa44.PrivateKey:
+			return &mldsa44PrivateKey{privKey: k}, nil
 		default:
 			return nil, errors.New("secret key type not recognized")
 		}
@@ -164,6 +167,8 @@ func (ks *fileBasedKeyStore) GetKey(ski []byte) (bccsp.Key, error) {
 			return &ed25519PublicKey{&k}, nil
 		case *rsa.PublicKey:
 			return &rsaPublicKey{k}, nil
+		case *mldsa44.PublicKey:
+			return &mldsa44PublicKey{pubKey: k}, nil
 		default:
 			return nil, errors.New("public key type not recognized")
 		}
@@ -219,6 +224,18 @@ func (ks *fileBasedKeyStore) StoreKey(k bccsp.Key) (err error) {
 		err = ks.storePublicKey(hex.EncodeToString(k.SKI()), kk.pubKey)
 		if err != nil {
 			return fmt.Errorf("failed storing RSA public key [%s]", err)
+		}
+
+	case *mldsa44PrivateKey:
+		err = ks.storePrivateKey(hex.EncodeToString(k.SKI()), kk.privKey)
+		if err != nil {
+			return fmt.Errorf("failed storing ML-DSA-44 private key [%s]", err)
+		}
+
+	case *mldsa44PublicKey:
+		err = ks.storePublicKey(hex.EncodeToString(k.SKI()), kk.pubKey)
+		if err != nil {
+			return fmt.Errorf("failed storing ML-DSA-44 public key [%s]", err)
 		}
 
 	case *aesPrivateKey:
