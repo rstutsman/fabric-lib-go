@@ -284,6 +284,8 @@ func (ks *fileBasedKeyStore) searchKeystoreForSKI(ski []byte) (k bccsp.Key, err 
 			k = &ed25519PrivateKey{&kk}
 		case *rsa.PrivateKey:
 			k = &rsaPrivateKey{kk}
+		case *mldsa44.PrivateKey:
+			k = &mldsa44PrivateKey{privKey: kk}
 		default:
 			continue
 		}
