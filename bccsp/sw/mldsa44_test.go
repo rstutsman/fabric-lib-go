@@ -69,3 +69,41 @@ func TestMLDSA44FileKeyStoreRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, valid)
 }
+
+func BenchmarkMLDSA44Sign(b *testing.B) {
+	csp, err := NewWithParams(256, "SHA2", NewDummyKeyStore())
+	require.NoError(b, err)
+	privateKey, err := csp.KeyGen(&bccsp.MLDSA44KeyGenOpts{Temporary: true})
+	require.NoError(b, err)
+	message := make([]byte, 1<<10)
+	b.ReportAllocs()
+	b.SetBytes(int64(len(message)))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := csp.Sign(privateKey, message, nil)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkMLDSA44Verify(b *testing.B) {
+	csp, err := NewWithParams(256, "SHA2", NewDummyKeyStore())
+	require.NoError(b, err)
+	privateKey, err := csp.KeyGen(&bccsp.MLDSA44KeyGenOpts{Temporary: true})
+	require.NoError(b, err)
+	publicKey, err := privateKey.PublicKey()
+	require.NoError(b, err)
+	message := make([]byte, 1<<10)
+	signature, err := csp.Sign(privateKey, message, nil)
+	require.NoError(b, err)
+	b.ReportAllocs()
+	b.SetBytes(int64(len(message)))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		valid, err := csp.Verify(publicKey, signature, message, nil)
+		if err != nil || !valid {
+			b.Fatalf("valid=%v err=%v", valid, err)
+		}
+	}
+}
